@@ -46,3 +46,9 @@ class QuestionResults(models.Model):
     test_result = models.ForeignKey(TestResult, null=False, blank=False, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, null=False, blank=False, on_delete=models.DO_NOTHING)
     answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.DO_NOTHING)
+
+
+class GroupTest(models.Model):
+    id = models.AutoField(primary_key=True, null=False, blank=False)
+    test_id = models.ForeignKey(StudTest, null=False, blank=False, on_delete=models.DO_NOTHING)
+    group_id = models.ForeignKey('login.Group', null=False, blank=False, on_delete=models.DO_NOTHING)

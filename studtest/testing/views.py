@@ -9,7 +9,8 @@ class MainTestPage(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(MainTestPage, self).get_context_data(**kwargs)
-        context['tests'] = TestPage.objects.filter('')
+        context['tests'] = TestPage.objects.filter()
+
 
 class TestPage(DetailView):
     template_name = 'test/test.html'

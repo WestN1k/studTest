@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import StudTest, Answer, Question
+from .models import StudTest, Answer, Question, GroupTest
 
 
 class questionInline(admin.StackedInline):
@@ -22,3 +22,4 @@ class TestAdmin(admin.ModelAdmin):
 
 admin.site.register(StudTest, TestAdmin)
 admin.site.register(Question, QuestionAdmin)
+admin.site.register(GroupTest)
