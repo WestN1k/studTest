@@ -1,7 +1,8 @@
+import datetime
+
 from django.db import models
 
 
-# Create your models here.
 class StudTest(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
     test_name = models.TextField(null=False, blank=False, verbose_name='название теста')
@@ -9,18 +10,28 @@ class StudTest(models.Model):
     available = models.BooleanField(default=False, verbose_name='тест доступен')
     test_available_start = models.DateTimeField(verbose_name='дата и время начала теста')
     test_available_end = models.DateTimeField(verbose_name='дата и время окончания теста')
+    requests = models.ManyToManyField('Question', verbose_name='вопросы к тесту')
 
     def __str__(self):
         return self.test_name
+
+    class Meta:
+        db_table = 'stud_test'
+        verbose_name = 'тест'
+        verbose_name_plural = 'Тесты'
 
 
 class Question(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
     question_name = models.TextField(null=False, blank=False, verbose_name='название вопроса')
-    test = models.ForeignKey(StudTest, on_delete=models.DO_NOTHING, verbose_name='название теста')
 
     def __str__(self):
         return self.question_name
+
+    class Meta:
+        db_table = 'question'
+        verbose_name = 'вопрос'
+        verbose_name_plural = 'Вопросы'
 
 
 class Answer(models.Model):
@@ -32,23 +43,80 @@ class Answer(models.Model):
     def __str__(self):
         return self.answer_name
 
+    class Meta:
+        db_table = 'answer'
+        verbose_name = 'ответ'
+        verbose_name_plural = 'Ответы'
+
 
 class TestResult(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
-    stud_id = models.ForeignKey('login.Student', null=False, blank=False, on_delete=models.DO_NOTHING)
+    student = models.ForeignKey('Student', null=False, blank=False, on_delete=models.DO_NOTHING)
     test_id = models.ForeignKey(StudTest, null=False, blank=False, on_delete=models.DO_NOTHING)
-    stud_grade = models.IntegerField(null=True, blank=True)
-    stud_attempt = models.IntegerField(null=True, blank=True)
-    is_true = models.BooleanField(default=False)
+    stud_grade = models.IntegerField(null=True, blank=True, verbose_name='оценка')
+    stud_attempt = models.IntegerField(null=True, blank=True, verbose_name='попыток')
+    is_true = models.BooleanField(default=False, verbose_name='тест пройден')
+    end_date_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'test_results'
 
 
 class QuestionResults(models.Model):
-    test_result = models.ForeignKey(TestResult, null=False, blank=False, on_delete=models.CASCADE)
-    question = models.ForeignKey(Question, null=False, blank=False, on_delete=models.DO_NOTHING)
-    answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.DO_NOTHING)
+    id = models.AutoField(primary_key=True, null=False, blank=False)
+    test_result = models.ForeignKey(TestResult, null=True, blank=True, on_delete=models.CASCADE)
+    question = models.OneToOneField(Question, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'question_results'
+
+
+class AnswerResults(models.Model):
+    id = models.AutoField(primary_key=True, null=False, blank=False)
+    question_result = models.ForeignKey(QuestionResults, null=True, blank=True, on_delete=models.CASCADE)
+    answer_result = models.OneToOneField(Answer, null=False, blank=False, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'answer_results'
 
 
 class GroupTest(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
-    test_id = models.ForeignKey(StudTest, null=False, blank=False, on_delete=models.DO_NOTHING)
-    group_id = models.ForeignKey('login.Group', null=False, blank=False, on_delete=models.DO_NOTHING)
+    test = models.ForeignKey(StudTest, null=False, blank=False, on_delete=models.DO_NOTHING)
+    group = models.ForeignKey('Group', null=False, blank=False, on_delete=models.DO_NOTHING)
+
+    def __str__(self):
+        return "группа: {0}, тест: {1}".format(self.group.group_name, self.test.test_name)
+
+    class Meta:
+        db_table = 'group_test'
+        verbose_name = 'тест для группы'
+        verbose_name_plural = 'Тесты для групп'
+
+
+class Group(models.Model):
+    id = models.AutoField(primary_key=True, null=False, blank=False)
+    group_name = models.TextField(null=False, blank=False, verbose_name='название группы')
+    group_year = models.IntegerField(null=False, blank=False, verbose_name='год')
+
+    def __str__(self):
+        return "{} {}".format(self.group_name, self.group_year)
+
+    class Meta:
+        db_table = 'group'
+        verbose_name = 'Группа'
+        verbose_name_plural = 'Группы'
+
+
+class Student(models.Model):
+    id = models.AutoField(primary_key=True, null=False, blank=False)
+    login = models.CharField(blank=False, null=False, max_length=200, verbose_name='логин/фамилия студента')
+    group = models.ForeignKey(Group, on_delete=models.DO_NOTHING, verbose_name='группа')
+
+    def __str__(self):
+        return self.login
+
+    class Meta:
+        db_table = 'student'
+        verbose_name = 'Студент'
+        verbose_name_plural = 'Студенты'

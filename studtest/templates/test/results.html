@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}результат теста "номер теста"{% endblock %}
+{% block content %}
+    <p>{{ result_test.student.login }}</p>
+    <p>{{ result_test.test_id.test_name }}</p>
+<p>{{ answers }}</p>
+<p></p>
+<p></p>
+{% endblock %}

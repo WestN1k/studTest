@@ -4,4 +4,13 @@
 {% block title %}список тестов{% endblock %}
 {% block content %}
     <h2>Здесь будет список тестов для студента</h2>
+    <p>{{ student }}</p>
+
+    {% for test in tests %}
+        <a href="{% url 'testpage' test.test_id__pk %}">Начать тестирование</a>
+        <p>{{ test.test_id__test_name }}</p>
+        <p>{{ test.test_id__test_available_start }}</p>
+        <p>{{ test.test_id__test_available_end }}</p>
+    {% endfor %}
+
 {% endblock %}

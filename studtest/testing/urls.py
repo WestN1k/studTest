@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import MainTestPage, TestPage
+from .views import MainTestPage, TestPage, Result
 
 
 urlpatterns = [
     path('', MainTestPage.as_view(), name='maintestpage'),
-    path('<int:pk>/', TestPage.as_view(), name='testpage'),
+    path('<int:pk>', TestPage.as_view(), name='testpage'),
+    path('results/<int:pk>', Result.as_view(), name='resultspage')
 ]

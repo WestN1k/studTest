@@ -1,10 +1,5 @@
 from django.contrib import admin
-from .models import StudTest, Answer, Question, GroupTest
-
-
-class questionInline(admin.StackedInline):
-    model = Question
-    extra = 0
+from .models import *
 
 
 class answerInline(admin.TabularInline):
@@ -17,9 +12,11 @@ class QuestionAdmin(admin.ModelAdmin):
 
 
 class TestAdmin(admin.ModelAdmin):
-    inlines = [questionInline, ]
+    filter_horizontal = ('requests',)
 
 
 admin.site.register(StudTest, TestAdmin)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(GroupTest)
+admin.site.register(Group)
+admin.site.register(Student)
