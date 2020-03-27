@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load random_questions %}
 
 {% block title %}тест "номер теста"{% endblock %}
 {% block content %}
@@ -11,48 +12,61 @@
                 <h1 class="display-4">{{ test.test_name }}</h1>
                 <p class="lead">{{ test.test_desc }}</p>
                 <hr>
-                <form action="" method="get">
-                    <input type="submit" class="btn btn-info" value="начать тестирование" name="start_test">
-                </form>
+                {% if result_test %}
+                    <p>Вы уже сдавали этот тест, можете посмотреть результаты</p>
+                    <a href="{% url 'resultspage' result_test.id %}">узнать результат</a>
+                {% else %}
+                    {% if created_result %}
+                        <p>можете узнать результаты</p>
+                    {% else %}
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <input type="submit" class="btn btn-info" value="начать тестирование" name="start_test">
+                        </form>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
     </div>
+
     {% if start_test %}
-     <form action="" method="post">
-        {% csrf_token %}
-    <div class="row">
-        <div class="col">
-                {% for question in test.requests.all %}
-                    <br>
-                    <div class="container">
-                        <div class="row">
-                            <div class="col bg-secondary">
-                                 <h3 class="text-white">{{ question.question_name }}</h3>
+         <form action="" method="post">
+            {% csrf_token %}
+        <div class="row">
+            <div class="col">
+                    {% for question in test.requests.all|random_questions:test.max_questions %}
+                        <br>
+                        <div class="container">
+                            <div class="row">
+                                <div class="col bg-secondary">
+                                     <h3 class="text-white">{{ question.question_name }}</h3>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                     <ul class="list-group nav nav-tabs nav-stacked">
+                                        {% for answer in question.answer_set.all %}
+                                            <div class="custom-control custom-checkbox bg-light">
+                                                <input name="{{ question.id }}" type="checkbox" value="{{ answer.id }}" class="custom-control-input" id="{{ answer.id }}">
+                                                <label class="custom-control-label text-info" for="{{ answer.id }}"><h5>{{ answer.answer_name }}</h5></label>
+                                            </div>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col">
-                                 <ul class="list-group nav nav-tabs nav-stacked">
-                                    {% for answer in question.answer_set.all %}
-                                        <div class="custom-control custom-checkbox bg-light">
-                                            <input name="{{ question.id }}" type="checkbox" value="{{ answer.id }}" class="custom-control-input" id="{{ answer.id }}">
-                                            <label class="custom-control-label text-info" for="{{ answer.id }}"><h5>{{ answer.answer_name }}</h5></label>
-                                        </div>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <br>
-                {% endfor %}
+                        <br>
+                    {% endfor %}
+            </div>
         </div>
-    </div>
-         <input type="submit" class="btn btn-info" value="отправить результат" name="test_result">
-    </form>
+             <input type="submit" class="btn btn-info" value="отправить результат" name="test_result">
+        </form>
     {% endif %}
+
     {% if created_result %}
         <a href="{% url 'resultspage' created_result %}">узнать результат</a>
     {% endif %}
-</div>
 
+</div>
+{{ message }}
 {% endblock %}

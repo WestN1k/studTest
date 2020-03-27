@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from .models import *
 
+STUDENT_ID = 2
 
 class MainTestPage(TemplateView):
     template_name = 'test/maintest.html'
@@ -14,7 +15,7 @@ class MainTestPage(TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
-        context['student'] = get_object_or_404(Student, pk=1)
+        context['student'] = get_object_or_404(Student, pk=STUDENT_ID)
         tests = GroupTest.objects.filter(group_id=context['student'].group, test_id__available=True)
         context['tests'] = tests.values('test_id__test_name',
                                         'test_id__pk',
@@ -33,19 +34,23 @@ class TestPage(TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
-        if request.GET.get('start_test'):
-            context['start_test'] = True
+        context['result_test'] = TestResult.objects.filter(student=STUDENT_ID, test_id=context['test'], is_true=True).last()
         return render(request, self.template_name, context=context)
 
     def post(self, request, *args, **kwargs):
         context = self.get_context_data()
+        if request.POST.get('start_test'):
+            context['start_test'] = True
+
         if request.POST.get('test_result'):
-            test_result = TestResult.objects.create(test_id=context['test'], student=Student.objects.get(pk=1), is_true=True)
+            test_result = TestResult.objects.create(test_id=context['test'], student=Student.objects.get(pk=STUDENT_ID), is_true=True)
             context['created_result'] = test_result.pk
-            for question in context['test'].requests.all():
-                question_result = QuestionResults.objects.create(test_result=test_result, question=question)
-                answers = request.POST.getlist("{}".format(question.id))
-                for answer in answers:
+            results_dict = dict(request.POST)
+            results_dict.pop('csrfmiddlewaretoken', None)
+            results_dict.pop('test_result', None)
+            for question in results_dict:
+                question_result = QuestionResults.objects.create(test_result=test_result, question=Question.objects.get(pk=question))
+                for answer in results_dict.get(question):
                     answer = Answer.objects.get(pk=answer)
                     AnswerResults.objects.create(question_result=question_result, answer_result=answer)
 
@@ -57,11 +62,10 @@ class Result(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(Result, self).get_context_data(**kwargs)
-        context['result_test'] = TestResult.objects.get(pk=self.kwargs.get('pk'))
-        # context['questions'] = QuestionResults.objects.filter(test_result=context['result_test']).select_related('question')
-        context['answers'] = AnswerResults.objects.filter(question_result__test_result=context['result_test'])
+        context['result_test'] = get_object_or_404(TestResult, pk=self.kwargs.get('pk'))
         return context
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
+        questions = context['result_test'].question_result
         return render(request, self.template_name, context=context)

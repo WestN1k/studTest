@@ -3,14 +3,29 @@ import datetime
 from django.db import models
 
 
+class Topic(models.Model):
+    id = models.AutoField(primary_key=True, null=False, blank=False)
+    topic_name = models.CharField(max_length=1000, null=False, blank=False, verbose_name='название теста')
+
+    def __str__(self):
+        return self.topic_name
+
+    class Meta:
+        db_table = 'topic'
+        verbose_name = 'Тема'
+        verbose_name_plural = 'Темы'
+
+
 class StudTest(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
-    test_name = models.TextField(null=False, blank=False, verbose_name='название теста')
+    test_name = models.CharField(max_length=1000, null=False, blank=False, verbose_name='название теста')
     test_desc = models.TextField(null=False, blank=False, verbose_name='краткое описание')
     available = models.BooleanField(default=False, verbose_name='тест доступен')
     test_available_start = models.DateTimeField(verbose_name='дата и время начала теста')
     test_available_end = models.DateTimeField(verbose_name='дата и время окончания теста')
     requests = models.ManyToManyField('Question', verbose_name='вопросы к тесту')
+    topic = models.ForeignKey(Topic, null=True, blank=True, on_delete=models.SET_NULL, verbose_name='выбор темы')
+    max_questions = models.IntegerField(null=True, blank=True, verbose_name='количество вопросов')
 
     def __str__(self):
         return self.test_name
@@ -51,7 +66,7 @@ class Answer(models.Model):
 
 class TestResult(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
-    student = models.ForeignKey('Student', null=False, blank=False, on_delete=models.DO_NOTHING)
+    student = models.ForeignKey('Student', null=False, blank=False, on_delete=models.CASCADE, related_name='test_result')
     test_id = models.ForeignKey(StudTest, null=False, blank=False, on_delete=models.DO_NOTHING)
     stud_grade = models.IntegerField(null=True, blank=True, verbose_name='оценка')
     stud_attempt = models.IntegerField(null=True, blank=True, verbose_name='попыток')
@@ -61,10 +76,13 @@ class TestResult(models.Model):
     class Meta:
         db_table = 'test_results'
 
+    def __str__(self):
+        return self.test_id.test_name
+
 
 class QuestionResults(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
-    test_result = models.ForeignKey(TestResult, null=True, blank=True, on_delete=models.CASCADE)
+    test_result = models.ForeignKey(TestResult, null=False, blank=False, on_delete=models.CASCADE, related_name='question_result')
     question = models.OneToOneField(Question, on_delete=models.CASCADE)
 
     class Meta:
@@ -73,7 +91,7 @@ class QuestionResults(models.Model):
 
 class AnswerResults(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
-    question_result = models.ForeignKey(QuestionResults, null=True, blank=True, on_delete=models.CASCADE)
+    question_result = models.ForeignKey(QuestionResults, null=False, blank=False, on_delete=models.CASCADE, related_name='answer_result')
     answer_result = models.OneToOneField(Answer, null=False, blank=False, on_delete=models.CASCADE)
 
     class Meta:

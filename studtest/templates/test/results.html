@@ -5,7 +5,11 @@
 {% block content %}
     <p>{{ result_test.student.login }}</p>
     <p>{{ result_test.test_id.test_name }}</p>
-<p>{{ answers }}</p>
-<p></p>
+    {% for question in result_test.question_result %}
+        <p>{{ question.question.question_name }}</p>
+        {% for answer in question.answer_result.all %}
+            <p>{{ answer }}</p>
+        {% endfor %}
+    {% endfor %}
 <p></p>
 {% endblock %}
